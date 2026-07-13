@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="start.css">
+
+  </head>   
+  <body class="main">
+    <p class="Welcome">"Enter First Greeting"
+
+    <img src="background-removed-background-removed.png" alt="image" style="width: 300px; margin-left: 50px; margin-top: 0px; ">
+    <p class="birth">
+      <strong>"Event Greet"
+
+      </strong>
+    </p>
+    </p>
+    <p class="guide">
+      Click On The Button To The Right And Enjoy&#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; &#8594; 
+    </p>
+    <div class="button">
+      <button onclick="playSong()" style="display: inline-block;" class="buttonb">
+        CLICKK
+
+      </button></div>
+      <!-- In the src add specific song as per your choice-->
+    <audio id="bgMusic">
+      <source src="    " type="audio/mpeg">
+    </audio>
+    <!-- Add 3 photos below in the 3 src -->
+
+    <img src="    " class="imgb">
+    <img src="     " class="imga">
+    <img src="      " class="imgc">
+
+    <a href="page1.html"><div style="text-align: center;">
+      <button style="display:block; margin-top: 50px;margin-left: 600px; padding:20px">
+        Next Page
+
+      </button>
+    </div></a>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script>
+      function playSong() {
+    const music = document.getElementById("bgMusic");
+    music.play();
+}
+      window.onload = function () {
+
+    const totalBalloons = 25; // you can change this number
+
+    for (let i = 0; i < totalBalloons; i++) {
+        createBalloon();
+    }
+
+    function createBalloon() {
+        const balloon = document.createElement("div");
+        balloon.classList.add("balloon");
+
+        // Random horizontal position
+        balloon.style.left = Math.random() * window.innerWidth + "px";
+
+        // Random colors
+        const colors = ["red", "blue", "yellow", "green", "purple", "pink", "orange"];
+        balloon.style.background = colors[Math.floor(Math.random() * colors.length)];
+
+        // Random speed (animation duration)
+        balloon.style.animationDuration = (4 + Math.random() * 3) + "s";
+
+        document.body.appendChild(balloon);
+
+        // Remove after animation ends
+        setTimeout(() => {
+            balloon.remove();
+        }, 7000);
+    }
+};
+
+    </script>
+
+  </body>
+ 
+</html>
