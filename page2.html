@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Yes/No Question with Fireworks</title>
+    <style>
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(270deg, rgb(248, 123, 143), white);
+            overflow: hidden; /* Prevents scrollbars during fireworks */
+        }
+
+        /* Card Container */
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            position: relative;
+            z-index: 10; /* Keeps card above background fireworks */
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+
+        /* Button Container */
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            height: 100px; /* Gives buttons room to scale */
+        }
+
+        /* Button Base Styles */
+        .btn {
+            padding: 15px 35px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Yes Button Specifics */
+        .btn-yes {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .btn-yes:hover {
+            transform: scale(1.4);
+            box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4);
+        }
+
+        /* No Button Specifics */
+        .btn-no {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-no:hover {
+            transform: scale(0.7);
+            box-shadow: 0 2px 5px rgba(231, 76, 60, 0.2);
+        }
+
+        /* Bottom Navigation Container */
+        .nav-container {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .btn-nav {
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            background-color: #555;
+            color: white;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        .btn-nav:hover {
+            background-color: #333;
+        }
+
+        /* Hidden Modal/Popup Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 100; /* High z-index to cover everything */
+        }
+
+        .modal {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transform: scale(0.7);
+            transition: transform 0.3s ease;
+            max-width: 320px;
+            width: 90%;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-overlay.show .modal {
+            transform: scale(1);
+        }
+
+        /* Dynamic Title Styling Setup */
+        .modal h3.success-title {
+            color: #2ecc71;
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+
+        .modal h3.error-title {
+            color: #e74c3c;
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+
+        .modal p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .modal button {
+            margin-top: 20px;
+            padding: 10px 25px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Firework Canvas styling */
+        #fireworksCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Let clicks pass through */
+            z-index: 5; /* Behind card and modal overlay */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Question Card -->
+    <div class="card">
+        <!-- Enter a question-->
+        <h2>"Enter a Yes Or No Question:"</h2>
+        <div class="btn-container">
+            <button class="btn btn-yes" id="yesBtn">Yes</button>
+            <button class="btn btn-no" id="noBtn">No</button>
+        </div>
+
+        <!-- Pagination Buttons Down Object -->
+        <div class="nav-container">
+            <button class="btn-nav" id="lastPageBtn">← Last Page</button>
+            <button class="btn-nav" id="nextPageBtn">Next Page →</button>
+        </div>
+    </div>
+
+    <!-- Reusable Dynamic Popup Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h3 id="modalTitle">Correct Answer! 🎉</h3>
+            <p id="modalBody">You made the right choice.</p>
+            <button id="closeBtn">Close</button>
+        </div>
+    </div>
+
+    <!-- Firework effect container -->
+    <canvas id="fireworksCanvas"></canvas>
+
+    <!-- JavaScript Logic -->
+    <script>
+        const yesButton = document.getElementById('yesBtn');
+        const noButton = document.getElementById('noBtn');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+        const closeButton = document.getElementById('closeBtn');
+
+        const lastPageButton = document.getElementById('lastPageBtn');
+        const nextPageButton = document.getElementById('nextPageBtn');
+
+        // Target URLs for manual bottom pagination layout
+        const NEXT_PAGE_URL = "page3.html"; 
+        const PREV_PAGE_URL = "page1.html"; 
+
+        // Helper function to update and display the popup contents dynamically
+        function showPopup(title, bodyText, isSuccess) {
+            modalTitle.innerText = title;
+            modalBody.innerText = bodyText;
+            
+            if (isSuccess) {
+                modalTitle.className = 'success-title';
+            } else {
+                modalTitle.className = 'error-title';
+            }
+            
+            modalOverlay.classList.add('show');
+        }
+
+        // --- Firework Logic ---
+        const canvas = document.getElementById('fireworksCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let fireworkAnimation;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                // Explosion velocity
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 8, // Horizontal spread
+                    y: (Math.random() - 0.5) * 8  // Vertical spread
+                };
+                this.alpha = 1; // Opacity
+                this.friction = 0.99; // Slows down over time
+                this.gravity = 0.05; // Pulls down over time
+            }
+
+            draw() {
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 3, 0, Math.PI * 2, false);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+
+            update() {
+                this.velocity.x *= this.friction;
+                this.velocity.y *= this.friction;
+                this.velocity.y += this.gravity;
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.alpha -= 0.01; // Fade out
+            }
+        }
+
+        function createFireworkCluster(x, y) {
+            const particleCount = 30;
+            const colors = ['#2ecc71', '#3498db', '#f1c40f', '#e74c3c', '#ae81ff'];
+            
+            for (let i = 0; i < particleCount; i++) {
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+        function animateFireworks() {
+            fireworkAnimation = requestAnimationFrame(animateFireworks);
+            // Clear canvas with slight trail effect
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)'; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach((particle, index) => {
+                if (particle.alpha > 0) {
+                    particle.update();
+                    particle.draw();
+                } else {
+                    particles.splice(index, 1); // Remove faded particles
+                }
+            });
+
+            // Stop animation loop if all particles are gone
+            if (particles.length === 0) {
+                cancelAnimationFrame(fireworkAnimation);
+                // Clear canvas completely
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        function startFireworksDisplay() {
+            // Cancel previous animation if running
+            if(fireworkAnimation) cancelAnimationFrame(fireworkAnimation);
+            particles = []; // Reset particles
+
+            // Create multiple bursts around the screen center
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            createFireworkCluster(centerX, centerY - 100);
+            setTimeout(() => createFireworkCluster(centerX - 150, centerY), 100);
+            setTimeout(() => createFireworkCluster(centerX + 150, centerY), 200);
+            setTimeout(() => createFireworkCluster(centerX, centerY + 100), 300);
+
+            animateFireworks();
+        }
+        // --- End Firework Logic ---
+
+
+        // Show Success Popup AND Fireworks when Yes is clicked
+        yesButton.addEventListener('click', () => {
+            showPopup("Correct Answer! 🎉", "You made the right choice.", true);
+            startFireworksDisplay();
+        });
+
+        // Show Incorrect Popup when No is clicked
+        noButton.addEventListener('click', () => {
+            showPopup("Incorrect Choice :(", "Please think about it again!", false);
+        });
+
+        // Hide the popup when Close is clicked
+        closeButton.addEventListener('click', () => {
+            modalOverlay.classList.remove('show');
+            // Optional: immediately stop fireworks when popup closes
+            particles = []; 
+        });
+
+        // Also close the popup if clicking outside the modal window box
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                modalOverlay.classList.remove('show');
+                particles = [];
+            }
+        });
+
+        // Bottom Manual Page Progress Navigation
+        lastPageButton.addEventListener('click', () => {
+            window.location.href = PREV_PAGE_URL;
+        });
+
+        nextPageButton.addEventListener('click', () => {
+            window.location.href = NEXT_PAGE_URL;
+        });
+    </script>
+
+</body>
+</html>
